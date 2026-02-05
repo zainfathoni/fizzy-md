@@ -1,0 +1,214 @@
+# fizzy-md
+
+Transparent Markdown→HTML wrapper for [Fizzy CLI](https://github.com/robzolkos/fizzy-cli).
+
+## Problem
+
+AI agents naturally write in Markdown (`**bold**`, `## Headers`), but Fizzy CLI requires HTML (`<strong>bold</strong>`, `<h2>Headers</h2>`). This creates friction — agents either:
+
+- Forget and use Markdown (poor rendering in Fizzy UI)
+- Manually convert to HTML (slows them down, breaks flow)
+- Avoid rich formatting entirely (less informative cards)
+
+## Solution
+
+`fizzy-md` is a transparent wrapper that accepts Markdown and converts it to HTML automatically. All `fizzy` commands work exactly as before — just write naturally!
+
+## Features
+
+✅ **Zero config** — just works when installed  
+✅ **100% backward compatible** — all fizzy commands pass through  
+✅ **Fast** — <100ms overhead, compiled Go binary  
+✅ **Smart file detection** — `.md` files auto-convert, `.html` files pass through  
+✅ **CommonMark compliant** — powered by [goldmark](https://github.com/yuin/goldmark)
+
+## Installation
+
+### Option 1: `go install` (recommended)
+
+```bash
+go install github.com/zainfathoni/fizzy-md@latest
+```
+
+Make sure `~/go/bin` is in your PATH.
+
+### Option 2: Build from source
+
+```bash
+git clone https://github.com/zainfathoni/fizzy-md.git
+cd fizzy-md
+go build -o fizzy-md
+sudo mv fizzy-md /usr/local/bin/
+```
+
+## Usage
+
+Use `fizzy-md` exactly like `fizzy`, but write Markdown instead of HTML:
+
+### Before (manual HTML)
+
+```bash
+fizzy card create \
+  --title "Test Card" \
+  --description "<h2>Overview</h2><p>This is <strong>important</strong>.</p><ul><li>Item 1</li><li>Item 2</li></ul>"
+```
+
+### After (natural Markdown)
+
+```bash
+fizzy-md card create \
+  --title "Test Card" \
+  --description "## Overview
+
+This is **important**.
+
+- Item 1
+- Item 2"
+```
+
+### Works with files too
+
+```bash
+# Create card.md with Markdown content
+fizzy-md card create --title "My Card" --description_file card.md
+```
+
+### Optional: Alias for convenience
+
+```bash
+alias fizzy='fizzy-md'
+```
+
+Now all your `fizzy` commands automatically support Markdown!
+
+## Supported Flags
+
+`fizzy-md` converts these flags automatically:
+
+| Flag | Description |
+|------|-------------|
+| `--description "text"` | Inline card description |
+| `--body "text"` | Inline comment body |
+| `--description_file path` | Card description from file |
+| `--body_file path` | Comment body from file |
+
+**File detection:**
+- `.md` files → convert to HTML
+- `.html` files → pass through unchanged
+- No extension → assume Markdown (agent-friendly default)
+
+All other arguments pass through to `fizzy` unchanged.
+
+## Examples
+
+### Create a card with rich formatting
+
+```bash
+fizzy-md card create \
+  --title "Bug Fix: Login Issue" \
+  --description "## Problem
+
+Users can't log in when password contains `&` character.
+
+## Root Cause
+
+- URL encoding not applied
+- Special chars break form submission
+
+## Fix
+
+Added `encodeURIComponent()` to password field.
+
+**Status:** ✅ Resolved"
+```
+
+### Add a comment with code block
+
+```bash
+fizzy-md comment create \
+  --card 42 \
+  --body "Suggested fix:
+
+\`\`\`javascript
+const password = encodeURIComponent(input.value);
+\`\`\`
+
+This handles all special characters correctly."
+```
+
+### Use a Markdown file
+
+```bash
+# notes.md
+## Meeting Notes
+
+- Discussed architecture
+- Agreed on Go implementation
+- Next: Build MVP
+
+fizzy-md card create --title "Sprint Planning" --description_file notes.md
+```
+
+## How It Works
+
+1. **Intercepts** your command-line arguments
+2. **Detects** Markdown in `--description`, `--body`, and file flags
+3. **Converts** Markdown → HTML using goldmark
+4. **Passes through** to real `fizzy` CLI
+5. **Preserves** all other args/flags exactly
+
+No modifications to `fizzy-cli` needed. Just a transparent wrapper!
+
+## Requirements
+
+- Go 1.23+ (for building)
+- [fizzy-cli](https://github.com/robzolkos/fizzy-cli) installed and in PATH
+- macOS or Linux (Windows untested but should work)
+
+## Development
+
+```bash
+# Clone the repo
+git clone https://github.com/zainfathoni/fizzy-md.git
+cd fizzy-md
+
+# Install dependencies
+go mod download
+
+# Build
+go build -o fizzy-md
+
+# Test
+./fizzy-md card create --title "Test" --description "## Heading"
+```
+
+## Inspiration
+
+This tool follows the "agent-first" design principle from Steve Yegge's [Software Survival 3.0](https://steve-yegge.medium.com/software-survival-3-0-97a2a6255f7b):
+
+> "Agents always act like they're in a hurry, and if something appears to be failing for them, they will rapidly switch to trying workarounds. [...] Conversely, if you build the tool to their tastes, then agents will use the hell out of it."
+
+**Design principle:** Minimize friction. Let agents write naturally (Markdown), handle the conversion transparently.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file.
+
+## Credits
+
+- Built with [goldmark](https://github.com/yuin/goldmark) - The best Markdown parser in Go
+- Wraps [fizzy-cli](https://github.com/robzolkos/fizzy-cli) by Rob Zolkos
+- Created for the [Autobots](https://github.com/zainfathoni) AI agent team
+
+## Contributing
+
+Contributions welcome! Please open an issue or PR.
+
+**Future ideas:**
+- Homebrew tap for easier installation
+- Windows support testing
+- Upstream integration into fizzy-cli (if Rob Zolkos is interested)
+
+---
+
+**Built with 🔧 by [Wheeljack](https://github.com/wheeljackz) for AI agents everywhere.**
