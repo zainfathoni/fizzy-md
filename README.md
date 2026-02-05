@@ -111,19 +111,31 @@ This is **important**.
 Convert Markdown to HTML first, then pass to fizzy:
 
 ```bash
-# Convert inline Markdown
-DESC=$(echo "## Hello\n\n**Bold** text" | fizzy-md card create --description -)
+# Convert inline Markdown via stdin
+DESC=$(echo -e "## Hello\n\n**Bold** text" | fizzy-md)
 fizzy card create --title "My Card" --description "$DESC"
 
-# Convert file
-HTML=$(cat description.md | fizzy-md card create --description_file -)
+# Convert file via stdin
+HTML=$(cat description.md | fizzy-md)
+fizzy card create --title "My Card" --description "$HTML"
+
+# Or store in variable first
+MARKDOWN="## Overview
+
+This is **important**.
+
+- Item 1
+- Item 2"
+
+HTML=$(echo "$MARKDOWN" | fizzy-md)
 fizzy card create --title "My Card" --description "$HTML"
 ```
 
 **Pros:**
 - ✅ Clear separation between conversion and CLI operations
 - ✅ Easier to debug and compose with other tools
-- ✅ Used by Optimus for agent coordination
+- ✅ Perfect for helper scripts and automation
+- ✅ Can store/reuse HTML output
 
 ### Option C: Alias (Convenient for Interactive Use)
 
@@ -228,6 +240,9 @@ fizzy-md card create --title "Sprint Planning" --description_file notes.md
 
 ## How It Works
 
+fizzy-md operates in two modes:
+
+### Wrapper Mode (Default)
 1. **Intercepts** your command-line arguments
 2. **Detects** Markdown in `--description`, `--body`, and file flags
 3. **Converts** Markdown → HTML using goldmark
@@ -235,6 +250,19 @@ fizzy-md card create --title "Sprint Planning" --description_file notes.md
 5. **Preserves** all other args/flags exactly
 
 No modifications to `fizzy-cli` needed. Just a transparent wrapper!
+
+### Stdin Mode (Pipe Support)
+When run with no arguments and piped input:
+```bash
+echo "## Hello" | fizzy-md
+# Output: <h2>Hello</h2>
+```
+
+Perfect for preprocessing in scripts:
+```bash
+HTML=$(cat notes.md | fizzy-md)
+fizzy card create --title "Notes" --description "$HTML"
+```
 
 ## Requirements
 
