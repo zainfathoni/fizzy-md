@@ -84,17 +84,11 @@ sudo mv fizzy-md /usr/local/bin/
 
 ## Usage
 
-Use `fizzy-md` exactly like `fizzy`, but write Markdown instead of HTML:
+fizzy-md is a **transparent wrapper** around fizzy CLI. You can use it in three ways:
 
-### Before (manual HTML)
+### Option A: Direct Usage (Recommended for Scripts)
 
-```bash
-fizzy card create \
-  --title "Test Card" \
-  --description "<h2>Overview</h2><p>This is <strong>important</strong>.</p><ul><li>Item 1</li><li>Item 2</li></ul>"
-```
-
-### After (natural Markdown)
+Use `fizzy-md` directly as a drop-in replacement for `fizzy`:
 
 ```bash
 fizzy-md card create \
@@ -107,20 +101,62 @@ This is **important**.
 - Item 2"
 ```
 
-### Works with files too
+**Pros:**
+- ✅ Explicit and clear
+- ✅ No confusion about which tool is running
+- ✅ Works reliably in scripts and automation
+
+### Option B: Preprocessing (Cleanest for Automation)
+
+Convert Markdown to HTML first, then pass to fizzy:
 
 ```bash
-# Create card.md with Markdown content
-fizzy-md card create --title "My Card" --description_file card.md
+# Convert inline Markdown
+DESC=$(echo "## Hello\n\n**Bold** text" | fizzy-md card create --description -)
+fizzy card create --title "My Card" --description "$DESC"
+
+# Convert file
+HTML=$(cat description.md | fizzy-md card create --description_file -)
+fizzy card create --title "My Card" --description "$HTML"
 ```
 
-### Optional: Alias for convenience
+**Pros:**
+- ✅ Clear separation between conversion and CLI operations
+- ✅ Easier to debug and compose with other tools
+- ✅ Used by Optimus for agent coordination
+
+### Option C: Alias (Convenient for Interactive Use)
+
+Make `fizzy` automatically use Markdown:
 
 ```bash
 alias fizzy='fizzy-md'
+
+# Now 'fizzy' supports Markdown
+fizzy card create --title "Test" --description "## Hello"
 ```
 
-Now all your `fizzy` commands automatically support Markdown!
+**Pros:**
+- ✅ Convenient for interactive terminal use
+- ✅ No need to type `fizzy-md` every time
+
+**Note:** This works because `fizzy-md` internally calls the real `fizzy` binary via `exec.LookPath()`, which finds the actual executable (not shell aliases). No recursion occurs.
+
+### File-Based Conversion
+
+Works with all three approaches:
+
+```bash
+# Create card.md with Markdown content
+echo "## My Card\n\n- Item 1\n- Item 2" > card.md
+
+# Direct usage
+fizzy-md card create --title "My Card" --description_file card.md
+
+# With alias
+alias fizzy='fizzy-md'
+fizzy card create --title "My Card" --description_file card.md
+```
 
 ## Supported Flags
 
