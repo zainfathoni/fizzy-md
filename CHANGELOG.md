@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Markdown table support via goldmark Table extension
+- Test coverage for tables (simple, alignment, inline formatting)
+- Total test count: 29 (was 26)
+
+### Fixed
+- Tables now render as proper HTML `<table>` elements instead of plain text
+
 ## [0.1.0] - 2026-02-05
 
 ### Added
