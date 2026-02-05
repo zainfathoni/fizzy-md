@@ -1,5 +1,9 @@
 # fizzy-md
 
+[![Test](https://github.com/zainfathoni/fizzy-md/actions/workflows/test.yml/badge.svg)](https://github.com/zainfathoni/fizzy-md/actions/workflows/test.yml)
+[![Release](https://github.com/zainfathoni/fizzy-md/actions/workflows/release.yml/badge.svg)](https://github.com/zainfathoni/fizzy-md/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Transparent Markdown→HTML wrapper for [Fizzy CLI](https://github.com/robzolkos/fizzy-cli).
 
 ## Problem
@@ -24,7 +28,44 @@ AI agents naturally write in Markdown (`**bold**`, `## Headers`), but Fizzy CLI 
 
 ## Installation
 
-### Option 1: `go install` (recommended)
+### Option 1: Homebrew (macOS/Linux - Recommended)
+
+```bash
+brew tap zainfathoni/fizzy
+brew install fizzy-md
+```
+
+### Option 2: Pre-built binaries
+
+Download the latest release for your platform from the [releases page](https://github.com/zainfathoni/fizzy-md/releases).
+
+**macOS:**
+```bash
+# Intel
+curl -L https://github.com/zainfathoni/fizzy-md/releases/latest/download/fizzy-md_Darwin_x86_64.tar.gz | tar xz
+sudo mv fizzy-md /usr/local/bin/
+
+# Apple Silicon (M1/M2/M3)
+curl -L https://github.com/zainfathoni/fizzy-md/releases/latest/download/fizzy-md_Darwin_arm64.tar.gz | tar xz
+sudo mv fizzy-md /usr/local/bin/
+```
+
+**Linux:**
+```bash
+# x86_64
+curl -L https://github.com/zainfathoni/fizzy-md/releases/latest/download/fizzy-md_Linux_x86_64.tar.gz | tar xz
+sudo mv fizzy-md /usr/local/bin/
+
+# ARM64
+curl -L https://github.com/zainfathoni/fizzy-md/releases/latest/download/fizzy-md_Linux_arm64.tar.gz | tar xz
+sudo mv fizzy-md /usr/local/bin/
+```
+
+**Windows:**
+
+Download `fizzy-md_Windows_x86_64.zip` from the [releases page](https://github.com/zainfathoni/fizzy-md/releases) and extract to a directory in your PATH.
+
+### Option 3: `go install`
 
 ```bash
 go install github.com/zainfathoni/fizzy-md@latest
@@ -32,7 +73,7 @@ go install github.com/zainfathoni/fizzy-md@latest
 
 Make sure `~/go/bin` is in your PATH.
 
-### Option 2: Build from source
+### Option 4: Build from source
 
 ```bash
 git clone https://github.com/zainfathoni/fizzy-md.git

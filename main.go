@@ -12,6 +12,8 @@ import (
 	"github.com/yuin/goldmark/renderer/html"
 )
 
+var version = "dev" // Set by GoReleaser at build time
+
 // Markdown to HTML converter using goldmark
 var md goldmark.Markdown
 
@@ -125,6 +127,12 @@ func processArgs(args []string) ([]string, error) {
 func main() {
 	// Get original args (skip program name)
 	args := os.Args[1:]
+	
+	// Handle --version flag
+	if len(args) == 1 && (args[0] == "--version" || args[0] == "-v") {
+		fmt.Printf("fizzy-md version %s\n", version)
+		os.Exit(0)
+	}
 	
 	// Process args for Markdown conversion
 	processedArgs, err := processArgs(args)

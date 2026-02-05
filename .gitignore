@@ -1,0 +1,17 @@
+# Binaries
+fizzy-md
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test coverage
+*.out
+coverage.txt
+
+# GoReleaser
+dist/
+
+# OS
+.DS_Store
