@@ -71,7 +71,7 @@ brews:
       owner: zainfathoni
       name: homebrew-fizzy
       token: "{{ .Env.GITHUB_TOKEN }}"
-    folder: Formula
+    directory: Formula
     homepage: https://github.com/zainfathoni/fizzy-md
     description: Transparent Markdown→HTML wrapper for Fizzy CLI
     license: MIT
