@@ -88,6 +88,68 @@ func TestConvertMarkdownToHTML(t *testing.T) {
 			input:    "Status: ✅ Complete 🚀",
 			expected: "<p>Status: ✅ Complete 🚀</p>",
 		},
+		{
+			name:  "simple table",
+			input: "| Name | Value |\n|------|-------|\n| Foo  | Bar   |\n| Baz  | Qux   |",
+			expected: `<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Foo</td>
+<td>Bar</td>
+</tr>
+<tr>
+<td>Baz</td>
+<td>Qux</td>
+</tr>
+</tbody>
+</table>`,
+		},
+		{
+			name:  "table with alignment",
+			input: "| Left | Center | Right |\n|:-----|:------:|------:|\n| A    | B      | C     |",
+			expected: `<table>
+<thead>
+<tr>
+<th style="text-align:left">Left</th>
+<th style="text-align:center">Center</th>
+<th style="text-align:right">Right</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">A</td>
+<td style="text-align:center">B</td>
+<td style="text-align:right">C</td>
+</tr>
+</tbody>
+</table>`,
+		},
+		{
+			name:  "table with inline formatting",
+			input: "| **Bold** | *Italic* | `Code` |\n|----------|----------|--------|\n| foo      | bar      | baz    |",
+			expected: `<table>
+<thead>
+<tr>
+<th><strong>Bold</strong></th>
+<th><em>Italic</em></th>
+<th><code>Code</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>foo</td>
+<td>bar</td>
+<td>baz</td>
+</tr>
+</tbody>
+</table>`,
+		},
 	}
 
 	for _, tt := range tests {

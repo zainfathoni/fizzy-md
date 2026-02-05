@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/renderer/html"
 )
 
@@ -18,8 +19,11 @@ var version = "dev" // Set by GoReleaser at build time
 var md goldmark.Markdown
 
 func init() {
-	// Configure goldmark with safe HTML rendering
+	// Configure goldmark with table support and safe HTML rendering
 	md = goldmark.New(
+		goldmark.WithExtensions(
+			extension.Table, // Enable Markdown table support
+		),
 		goldmark.WithRendererOptions(
 			html.WithUnsafe(), // Allow raw HTML passthrough
 		),
