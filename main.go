@@ -138,6 +138,28 @@ func main() {
 		os.Exit(0)
 	}
 	
+	// Handle stdin mode: if no args and stdin is piped, convert and output
+	if len(args) == 0 {
+		stat, _ := os.Stdin.Stat()
+		if (stat.Mode() & os.ModeCharDevice) == 0 {
+			// Stdin is piped, not a terminal
+			var buf bytes.Buffer
+			if _, err := buf.ReadFrom(os.Stdin); err != nil {
+				fmt.Fprintf(os.Stderr, "fizzy-md error: failed to read stdin: %v\n", err)
+				os.Exit(1)
+			}
+			
+			html, err := convertMarkdownToHTML(buf.String())
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "fizzy-md error: %v\n", err)
+				os.Exit(1)
+			}
+			
+			fmt.Print(html)
+			os.Exit(0)
+		}
+	}
+	
 	// Process args for Markdown conversion
 	processedArgs, err := processArgs(args)
 	if err != nil {
