@@ -70,7 +70,7 @@ brews:
   - repository:
       owner: zainfathoni
       name: homebrew-fizzy
-      token: "{{ .Env.GITHUB_TOKEN }}"
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     directory: Formula
     homepage: https://github.com/zainfathoni/fizzy-md
     description: Transparent Markdown→HTML wrapper for Fizzy CLI
