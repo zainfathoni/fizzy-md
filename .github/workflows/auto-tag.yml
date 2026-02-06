@@ -1,0 +1,88 @@
+name: Auto Tag Release
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'CHANGELOG.md'
+
+permissions:
+  contents: write
+
+jobs:
+  auto-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Extract version from CHANGELOG
+        id: version
+        run: |
+          # Extract first version header (e.g., "## [0.1.2]")
+          VERSION=$(grep -m 1 '^## \[' CHANGELOG.md | sed 's/## \[\(.*\)\].*/\1/')
+          
+          if [ -z "$VERSION" ]; then
+            echo "❌ No version found in CHANGELOG.md"
+            exit 1
+          fi
+          
+          # Validate semver format
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$'; then
+            echo "❌ Invalid version format: $VERSION (expected semver)"
+            exit 1
+          fi
+          
+          echo "✅ Found version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Check if tag exists
+        id: check
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "⏭️  Tag $TAG already exists, skipping"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "🆕 Tag $TAG does not exist, will create"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Extract release notes
+        if: steps.check.outputs.exists == 'false'
+        id: notes
+        run: |
+          # Extract release notes for the current version
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          # Get lines between current version header and next version header
+          NOTES=$(awk "/^## \[$VERSION\]/,/^## \[/" CHANGELOG.md | sed '1d;$d')
+          
+          if [ -z "$NOTES" ]; then
+            echo "⚠️  No release notes found for version $VERSION"
+            NOTES="Release $VERSION"
+          fi
+          
+          # Save to file (multiline)
+          echo "$NOTES" > /tmp/release-notes.txt
+          echo "notes_file=/tmp/release-notes.txt" >> $GITHUB_OUTPUT
+      
+      - name: Create and push tag
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          NOTES_FILE="${{ steps.notes.outputs.notes_file }}"
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create annotated tag with release notes
+          git tag -a "$TAG" -F "$NOTES_FILE"
+          
+          # Push tag to origin (triggers release workflow)
+          git push origin "$TAG"
+          
+          echo "✅ Created and pushed tag: $TAG"
+          echo "🚀 Release workflow should start now"

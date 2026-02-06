@@ -91,6 +91,47 @@ echo "## Test" > test.md
    - Why the change is needed
    - Any relevant issue numbers
 
+## Release Process
+
+Releases are automated — maintainers only need to update the CHANGELOG:
+
+1. **Update CHANGELOG.md** with the new version:
+   ```markdown
+   ## [X.Y.Z] - YYYY-MM-DD
+   
+   ### Added
+   - New feature descriptions
+   
+   ### Changed
+   - Changes to existing functionality
+   
+   ### Fixed
+   - Bug fixes
+   ```
+   Follow [Keep a Changelog](https://keepachangelog.com/) format and [Semantic Versioning](https://semver.org/).
+
+2. **Commit and push to master:**
+   ```bash
+   git add CHANGELOG.md
+   git commit -m "Bump version to X.Y.Z"
+   git push origin master
+   ```
+
+3. **Automation handles the rest:**
+   - The `auto-tag` workflow detects the version change
+   - Creates an annotated git tag (`vX.Y.Z`)
+   - Pushes the tag to trigger the release workflow
+   - Release workflow builds binaries and creates GitHub release
+   - Homebrew tap gets automatically updated
+
+**Manual fallback** (if automation fails):
+```bash
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin vX.Y.Z
+```
+
+The release workflow will still run and create the GitHub release.
+
 ## Code Style
 
 - Follow standard Go conventions (`gofmt`, `go vet`)

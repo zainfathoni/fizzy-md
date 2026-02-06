@@ -305,12 +305,49 @@ MIT License - see [LICENSE](LICENSE) file.
 - Wraps [fizzy-cli](https://github.com/robzolkos/fizzy-cli) by Rob Zolkos
 - Created for the [Autobots](https://github.com/zainfathoni) AI agent team
 
+## Release Process
+
+Releases are automated via GitHub Actions:
+
+1. **Update CHANGELOG.md** with the new version following [Keep a Changelog](https://keepachangelog.com/) format:
+   ```markdown
+   ## [X.Y.Z] - YYYY-MM-DD
+   
+   ### Added
+   - New feature description
+   
+   ### Fixed
+   - Bug fix description
+   ```
+
+2. **Commit and push** to `master`:
+   ```bash
+   git add CHANGELOG.md
+   git commit -m "Bump version to X.Y.Z"
+   git push origin master
+   ```
+
+3. **Automatic tag creation** — The `auto-tag` workflow will:
+   - Detect the version change in CHANGELOG.md
+   - Create an annotated git tag (`vX.Y.Z`)
+   - Push the tag to trigger the release workflow
+
+4. **Release workflow** — Automatically:
+   - Builds binaries for all platforms (macOS, Linux, Windows)
+   - Creates a GitHub release with CHANGELOG notes
+   - Updates the Homebrew tap
+
+**Manual fallback:** If automation fails, you can still create tags manually:
+```bash
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin vX.Y.Z
+```
+
 ## Contributing
 
 Contributions welcome! Please open an issue or PR.
 
 **Future ideas:**
-- Homebrew tap for easier installation
 - Windows support testing
 - Upstream integration into fizzy-cli (if Rob Zolkos is interested)
 
