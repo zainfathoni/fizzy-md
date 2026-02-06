@@ -71,6 +71,9 @@ jobs:
       
       - name: Create and push tag
         if: steps.check.outputs.exists == 'false'
+        env:
+          # Use PAT to push tag - GITHUB_TOKEN pushes don't trigger other workflows
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
           TAG="v${{ steps.version.outputs.version }}"
           NOTES_FILE="${{ steps.notes.outputs.notes_file }}"
@@ -81,8 +84,8 @@ jobs:
           # Create annotated tag with release notes
           git tag -a "$TAG" -F "$NOTES_FILE"
           
-          # Push tag to origin (triggers release workflow)
-          git push origin "$TAG"
+          # Push tag using PAT (triggers release workflow)
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "$TAG"
           
           echo "✅ Created and pushed tag: $TAG"
           echo "🚀 Release workflow should start now"
