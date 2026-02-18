@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -218,7 +220,7 @@ func TestReadAndConvertFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var filePath string
-			
+
 			if !tt.expectError || tt.filename != "does-not-exist.md" {
 				// Create test file
 				filePath = filepath.Join(tmpDir, tt.filename)
@@ -230,18 +232,18 @@ func TestReadAndConvertFile(t *testing.T) {
 			}
 
 			result, err := readAndConvertFile(filePath)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("expected error but got none")
 				}
 				return
 			}
-			
+
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			
+
 			if result != tt.expected {
 				t.Errorf("\nFilename: %s\nExpected: %q\nGot:      %q", tt.filename, tt.expected, result)
 			}
@@ -323,7 +325,7 @@ func TestProcessArgs(t *testing.T) {
 				foundTitle := false
 				foundBoard := false
 				foundDescription := false
-				
+
 				for i, v := range result {
 					if v == "--title" && i+1 < len(result) && result[i+1] == "Test" {
 						foundTitle = true
@@ -337,7 +339,7 @@ func TestProcessArgs(t *testing.T) {
 						}
 					}
 				}
-				
+
 				if !foundTitle {
 					t.Error("--title flag not preserved correctly")
 				}
@@ -365,18 +367,18 @@ func TestProcessArgs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := processArgs(tt.input)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("expected error but got none")
 				}
 				return
 			}
-			
+
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			
+
 			if tt.checkFn != nil {
 				tt.checkFn(result)
 			}
@@ -386,13 +388,13 @@ func TestProcessArgs(t *testing.T) {
 
 func TestProcessArgsWithFiles(t *testing.T) {
 	tmpDir := t.TempDir()
-	
+
 	// Create test markdown file
 	mdFile := filepath.Join(tmpDir, "test.md")
 	if err := os.WriteFile(mdFile, []byte("## From File\n\n- Item 1\n- Item 2"), 0644); err != nil {
 		t.Fatalf("failed to create test file: %v", err)
 	}
-	
+
 	// Create test HTML file (should passthrough)
 	htmlFile := filepath.Join(tmpDir, "test.html")
 	if err := os.WriteFile(htmlFile, []byte("<h2>Already HTML</h2>"), 0644); err != nil {
@@ -404,7 +406,7 @@ func TestProcessArgsWithFiles(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		
+
 		// Find the converted file path
 		for i, v := range result {
 			if v == "--description_file" && i+1 < len(result) {
@@ -430,7 +432,7 @@ func TestProcessArgsWithFiles(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		
+
 		// Find the file path - should still create temp file but with passthrough content
 		for i, v := range result {
 			if v == "--description_file" && i+1 < len(result) {
@@ -457,12 +459,30 @@ func TestProcessArgsWithFiles(t *testing.T) {
 }
 
 func TestFindFizzySkipsSelf(t *testing.T) {
-	// findFizzy should not return a path that resolves to the fizzy-md binary itself
-	result := findFizzy()
-	if result == "" {
-		t.Skip("no fizzy binary found in PATH (expected in CI)")
+	tmpDir := t.TempDir()
+	fakeFizzy := filepath.Join(tmpDir, "fizzy")
+	if runtime.GOOS == "windows" {
+		ext := ".exe"
+		if pathext := os.Getenv("PATHEXT"); pathext != "" {
+			parts := strings.Split(pathext, ";")
+			if len(parts) > 0 && strings.TrimSpace(parts[0]) != "" {
+				ext = strings.TrimSpace(parts[0])
+				if !strings.HasPrefix(ext, ".") {
+					ext = "." + ext
+				}
+			}
+		}
+		fakeFizzy += ext
+	}
+	if err := os.WriteFile(fakeFizzy, []byte("#!/bin/sh\necho fake\n"), 0755); err != nil {
+		t.Fatalf("failed to create fake fizzy: %v", err)
 	}
 
+	t.Setenv("PATH", tmpDir)
+	result := findFizzy()
+	if result == "" {
+		t.Fatal("expected fizzy binary to be found in PATH")
+	}
 	self, _ := os.Executable()
 	if self != "" {
 		selfReal, _ := filepath.EvalSymlinks(self)
@@ -470,6 +490,9 @@ func TestFindFizzySkipsSelf(t *testing.T) {
 		if selfReal == resultReal {
 			t.Errorf("findFizzy returned self: %s", result)
 		}
+	}
+	if filepath.Clean(result) != filepath.Clean(fakeFizzy) {
+		t.Errorf("expected %s, got %s", fakeFizzy, result)
 	}
 }
 
@@ -500,7 +523,8 @@ func TestIsShellWrapperForFizzyMd(t *testing.T) {
 
 	// A real binary (large file, not a wrapper)
 	notWrapper := filepath.Join(tmpDir, "real")
-	os.WriteFile(notWrapper, []byte("#!/bin/sh\nexec /opt/homebrew/bin/fizzy \"$@\"\n"), 0755)
+	largePayload := bytes.Repeat([]byte("a"), 5000)
+	os.WriteFile(notWrapper, largePayload, 0755)
 	if isShellWrapperForFizzyMd(notWrapper) {
 		t.Error("expected non-wrapper to not be detected")
 	}
