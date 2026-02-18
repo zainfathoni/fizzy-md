@@ -128,6 +128,64 @@ func processArgs(args []string) ([]string, error) {
 	return result, nil
 }
 
+// findFizzy locates the real fizzy binary, avoiding circular resolution.
+// Priority: FIZZY_PATH env var → PATH lookup (skipping our own binary).
+func findFizzy() string {
+	// 1. Explicit override via env var
+	if p := os.Getenv("FIZZY_PATH"); p != "" {
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
+	}
+
+	// 2. Resolve our own executable path so we can skip it
+	self, _ := os.Executable()
+	if self != "" {
+		self, _ = filepath.EvalSymlinks(self)
+	}
+
+	// 3. Walk PATH entries looking for a "fizzy" that isn't us
+	pathEnv := os.Getenv("PATH")
+	for _, dir := range filepath.SplitList(pathEnv) {
+		candidate := filepath.Join(dir, "fizzy")
+		info, err := os.Stat(candidate)
+		if err != nil || info.IsDir() {
+			continue
+		}
+
+		real, _ := filepath.EvalSymlinks(candidate)
+
+		// Skip if it resolves to ourselves (fizzy-md)
+		if self != "" && real == self {
+			continue
+		}
+
+		// Skip shell scripts that call fizzy-md (wrapper scripts)
+		if isShellWrapperForFizzyMd(candidate) {
+			continue
+		}
+
+		return candidate
+	}
+
+	return ""
+}
+
+// isShellWrapperForFizzyMd does a quick check if a file is a small shell script
+// that references fizzy-md (i.e. a wrapper that would cause a loop).
+func isShellWrapperForFizzyMd(path string) bool {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return false
+	}
+	// Only check small files (real fizzy binary is >1MB)
+	if len(data) > 4096 {
+		return false
+	}
+	content := string(data)
+	return strings.Contains(content, "fizzy-md")
+}
+
 func main() {
 	// Get original args (skip program name)
 	args := os.Args[1:]
@@ -167,11 +225,11 @@ func main() {
 		os.Exit(1)
 	}
 	
-	// Find fizzy executable
-	fizzyPath, err := exec.LookPath("fizzy")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "fizzy-md error: fizzy command not found in PATH\n")
-		fmt.Fprintf(os.Stderr, "Please install fizzy-cli: https://github.com/robzolkos/fizzy-cli\n")
+	// Find fizzy executable, avoiding circular resolution back to ourselves
+	fizzyPath := findFizzy()
+	if fizzyPath == "" {
+		fmt.Fprintf(os.Stderr, "fizzy-md error: fizzy command not found\n")
+		fmt.Fprintf(os.Stderr, "Set FIZZY_PATH or install fizzy-cli: https://github.com/robzolkos/fizzy-cli\n")
 		os.Exit(1)
 	}
 	

@@ -456,6 +456,56 @@ func TestProcessArgsWithFiles(t *testing.T) {
 	})
 }
 
+func TestFindFizzySkipsSelf(t *testing.T) {
+	// findFizzy should not return a path that resolves to the fizzy-md binary itself
+	result := findFizzy()
+	if result == "" {
+		t.Skip("no fizzy binary found in PATH (expected in CI)")
+	}
+
+	self, _ := os.Executable()
+	if self != "" {
+		selfReal, _ := filepath.EvalSymlinks(self)
+		resultReal, _ := filepath.EvalSymlinks(result)
+		if selfReal == resultReal {
+			t.Errorf("findFizzy returned self: %s", result)
+		}
+	}
+}
+
+func TestFindFizzyRespectsEnvVar(t *testing.T) {
+	// Create a fake fizzy binary
+	tmpDir := t.TempDir()
+	fakeFizzy := filepath.Join(tmpDir, "fizzy")
+	if err := os.WriteFile(fakeFizzy, []byte("#!/bin/sh\necho fake"), 0755); err != nil {
+		t.Fatalf("failed to create fake fizzy: %v", err)
+	}
+
+	t.Setenv("FIZZY_PATH", fakeFizzy)
+	result := findFizzy()
+	if result != fakeFizzy {
+		t.Errorf("expected %s, got %s", fakeFizzy, result)
+	}
+}
+
+func TestIsShellWrapperForFizzyMd(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// A wrapper script that references fizzy-md
+	wrapper := filepath.Join(tmpDir, "wrapper")
+	os.WriteFile(wrapper, []byte("#!/bin/sh\nexec /opt/homebrew/bin/fizzy-md \"$@\"\n"), 0755)
+	if !isShellWrapperForFizzyMd(wrapper) {
+		t.Error("expected wrapper to be detected")
+	}
+
+	// A real binary (large file, not a wrapper)
+	notWrapper := filepath.Join(tmpDir, "real")
+	os.WriteFile(notWrapper, []byte("#!/bin/sh\nexec /opt/homebrew/bin/fizzy \"$@\"\n"), 0755)
+	if isShellWrapperForFizzyMd(notWrapper) {
+		t.Error("expected non-wrapper to not be detected")
+	}
+}
+
 // Benchmark for performance requirement (<100ms)
 func BenchmarkConvertMarkdownToHTML(b *testing.B) {
 	input := `## Overview
