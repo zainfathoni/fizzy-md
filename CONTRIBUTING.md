@@ -122,7 +122,8 @@ Releases are automated — maintainers only need to update the CHANGELOG:
    - Creates an annotated git tag (`vX.Y.Z`)
    - Pushes the tag to trigger the release workflow
    - Release workflow builds binaries and creates GitHub release
-   - Homebrew tap gets automatically updated
+   - The canonical `zainfathoni/tap` Homebrew tap gets automatically updated
+   - The former `zainfathoni/fizzy` tap stays synchronized for 2–3 releases
 
 **Manual fallback** (if automation fails):
 ```bash

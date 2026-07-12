@@ -31,8 +31,15 @@ AI agents naturally write in Markdown (`**bold**`, `## Headers`), but Fizzy CLI 
 ### Option 1: Homebrew (macOS/Linux - Recommended)
 
 ```bash
-brew tap zainfathoni/fizzy
-brew install fizzy-md
+brew install zainfathoni/tap/fizzy-md
+```
+
+The former `zainfathoni/fizzy` tap will remain synchronized for 2–3 releases
+to give existing installations time to migrate. Switch to the canonical tap with:
+
+```bash
+brew untap zainfathoni/fizzy
+brew tap zainfathoni/tap
 ```
 
 ### Option 2: Pre-built binaries
@@ -335,7 +342,8 @@ Releases are automated via GitHub Actions:
 4. **Release workflow** — Automatically:
    - Builds binaries for all platforms (macOS, Linux, Windows)
    - Creates a GitHub release with CHANGELOG notes
-   - Updates the Homebrew tap
+   - Updates the canonical `zainfathoni/tap` Homebrew tap
+   - Keeps the former `zainfathoni/fizzy` tap synchronized for 2–3 releases
 
 **Manual fallback:** If automation fails, you can still create tags manually:
 ```bash

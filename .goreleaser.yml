@@ -67,7 +67,22 @@ release:
     **Full Changelog**: https://github.com/zainfathoni/fizzy-md/compare/{{ .PreviousTag }}...{{ .Tag }}
 
 brews:
-  - repository:
+  - name: fizzy-md
+    repository:
+      owner: zainfathoni
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/zainfathoni/fizzy-md
+    description: Transparent Markdown→HTML wrapper for Fizzy CLI
+    license: MIT
+    test: |
+      system "#{bin}/fizzy-md --version"
+    install: |
+      bin.install "fizzy-md"
+  # Keep the previous tap synchronized for 2-3 releases during migration.
+  - name: fizzy-md
+    repository:
       owner: zainfathoni
       name: homebrew-fizzy
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
